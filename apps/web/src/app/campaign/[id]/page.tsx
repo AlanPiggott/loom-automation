@@ -2,7 +2,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Page, PageType } from "@video-outreach/shared";
+import { Page, PageType, JobStatusCount } from "@video-outreach/shared";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -10,12 +10,15 @@ export default function CampaignDetail() {
   const [pages, setPages] = useState<Page[]>([]);
   const [type, setType] = useState<PageType>("COMPANY");
   const [url, setUrl]   = useState("");
+  const [counts, setCounts] = useState<JobStatusCount | null>(null);
 
   async function load() {
     const res = await fetch(`/api/pages?campaignId=${id}`);
     setPages(await res.json());
     const c = await fetch(`/api/campaigns`).then((r) => r.json()) as any[];
     setName(c.find((row) => row.id === id)?.name ?? "");
+    const statusRes = await fetch(`/api/jobs/status?campaignId=${id}`);
+    setCounts(await statusRes.json());
   }
 
   useEffect(() => { load(); }, [id]);
@@ -41,6 +44,22 @@ export default function CampaignDetail() {
     <main className="mx-auto max-w-2xl p-8">
       <Link href="/" className="text-blue-600">&larr; Back</Link>
       <h1 className="text-2xl font-bold mt-2 mb-4">Pages for "{name}"</h1>
+
+      {counts && (
+        <p className="mb-4 text-sm text-gray-700">
+          Queued: {counts.queued} &nbsp;•&nbsp;
+          Rendering: {counts.rendering} &nbsp;•&nbsp;
+          Done: {counts.done} &nbsp;•&nbsp;
+          Error: {counts.error}
+        </p>
+      )}
+
+      <Link
+        href={`/campaign/${id}/leads`}
+        className="inline-block mb-4 bg-green-600 text-white px-3 py-2 rounded"
+      >
+        Import Leads
+      </Link>
 
       <form onSubmit={add} className="flex gap-2 items-end mb-6">
         <label className="flex flex-col">

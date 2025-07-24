@@ -23,3 +23,10 @@ export interface Page {
   payload_json: { url?: string };
   created_at: string;
 }
+
+export interface JobStatusCount {
+  queued: number;
+  rendering: number;
+  done: number;
+  error: number;
+}
