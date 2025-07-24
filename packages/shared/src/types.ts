@@ -7,10 +7,13 @@ export interface Campaign {
 
 export interface Job {
   id: string;
-  campaignId: string;
-  leadJson: Record<string, unknown>;
+  campaign_id: string;
+  lead_json: { email: string; website: string; [k: string]: unknown };
   status: "queued" | "rendering" | "done" | "error";
-  error?: string;
+  error_msg?: string;
+  video_url?: string;
+  thumbnail_url?: string;
+  created_at: string;
 }
 
 export type PageType = "COMPANY" | "STATIC";

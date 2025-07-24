@@ -6,7 +6,7 @@ import { Page, PageType, JobStatusCount } from "@video-outreach/shared";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
-  const [name, setName] = useState("");         // campaign name (for header)
+  const [campaign, setCampaign] = useState<{ name: string; master_video_url: string | null }>({ name: "", master_video_url: null });
   const [pages, setPages] = useState<Page[]>([]);
   const [type, setType] = useState<PageType>("COMPANY");
   const [url, setUrl]   = useState("");
@@ -16,7 +16,8 @@ export default function CampaignDetail() {
     const res = await fetch(`/api/pages?campaignId=${id}`);
     setPages(await res.json());
     const c = await fetch(`/api/campaigns`).then((r) => r.json()) as any[];
-    setName(c.find((row) => row.id === id)?.name ?? "");
+    const row = c.find((row) => row.id === id);
+    setCampaign({ name: row?.name ?? "", master_video_url: row?.master_video_url ?? null });
     const statusRes = await fetch(`/api/jobs/status?campaignId=${id}`);
     setCounts(await statusRes.json());
   }
@@ -43,7 +44,7 @@ export default function CampaignDetail() {
   return (
     <main className="mx-auto max-w-2xl p-8">
       <Link href="/" className="text-blue-600">&larr; Back</Link>
-      <h1 className="text-2xl font-bold mt-2 mb-4">Pages for "{name}"</h1>
+      <h1 className="text-2xl font-bold mt-2 mb-4">Pages for "{campaign.name}"</h1>
 
       {counts && (
         <p className="mb-4 text-sm text-gray-700">
@@ -53,6 +54,29 @@ export default function CampaignDetail() {
           Error: {counts.error}
         </p>
       )}
+
+      {/* Master video upload */}
+      <section className="mb-6">
+        <h2 className="font-semibold mb-2">Master Video</h2>
+        {campaign.master_video_url ? (
+          <video src={campaign.master_video_url} controls className="w-full max-h-56 rounded" />
+        ) : (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const fileInput = (e.currentTarget.elements.namedItem("file") as HTMLInputElement);
+              if (!fileInput.files?.[0]) return;
+              const fd = new FormData();
+              fd.set("file", fileInput.files[0]);
+              await fetch(`/api/campaigns/${id}/master-video`, { method: "PUT", body: fd });
+              load();          // refresh state
+            }}
+          >
+            <input type="file" name="file" accept="video/mp4" className="mb-2" />
+            <button className="bg-blue-600 text-white px-3 py-1 rounded">Upload</button>
+          </form>
+        )}
+      </section>
 
       <Link
         href={`/campaign/${id}/leads`}
