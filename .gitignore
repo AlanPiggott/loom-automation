@@ -1,0 +1,14 @@
+# node
+node_modules
+.env*
+.next
+dist
+.DS_Store
+
+# FFmpeg / recordings
+*.mp4
+*.webm
+*.gif
+
+# misc
+pnpm-lock.yaml

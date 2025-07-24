@@ -1,0 +1,1 @@
+console.log("Render worker booted – ready for tasks (implementation later).");

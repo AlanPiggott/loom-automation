@@ -1,0 +1,16 @@
+{
+  "name": "@video-outreach/shared",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.6.1",
+    "next": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
