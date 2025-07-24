@@ -23,6 +23,11 @@ export default async function Landing({ params }: Props) {
     );
   }
 
+  await supabase.from("events").insert({
+    job_id: params.id,
+    event_type: "open"
+  });
+
   // Derive Cloudflare Stream UID from stored HLS URL
   // stored format: https://videodelivery.net/<uid>/manifest/video.m3u8
   const parts = data.video_url.split("/");
@@ -37,6 +42,7 @@ export default async function Landing({ params }: Props) {
       </h1>
 
       <iframe
+        id="cf-player"
         src={iframeSrc}
         allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
         allowFullScreen
@@ -49,6 +55,29 @@ export default async function Landing({ params }: Props) {
       >
         Book a Call
       </Link>
+
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+          (function(){
+            const jobId = "${params.id}";
+            function track(type){
+              fetch("/api/track", {
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body: JSON.stringify({ jobId, type })
+              });
+            }
+            // Cloudflare Stream iframe posts messages like {event:"play"} or "ended"
+            window.addEventListener("message", (e)=>{
+              if(!e.data || typeof e.data!=="object") return;
+              if(e.data.event==="play") track("play");
+              if(e.data.event==="ended") track("finish");
+            });
+          })();
+        `
+        }}
+      />
     </main>
   );
 }

@@ -33,3 +33,12 @@ export interface JobStatusCount {
   done: number;
   error: number;
 }
+
+export type EventType = "open" | "play" | "finish";
+
+export interface Event {
+  id: string;
+  job_id: string;
+  event_type: EventType;
+  created_at: string;
+}

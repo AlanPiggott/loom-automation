@@ -3,6 +3,7 @@ import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Page, PageType, JobStatusCount } from "@video-outreach/shared";
+import { StatusPill } from "../../../components/StatusPill";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,18 @@ export default function CampaignDetail() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/jobs/status?campaignId=${id}`);
+      const fresh = (await res.json()) as JobStatusCount;
+      setCounts(fresh);
+
+      // stop polling if nothing left to process
+      if (fresh.queued === 0 && fresh.rendering === 0) clearInterval(interval);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [id]);
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -46,13 +59,14 @@ export default function CampaignDetail() {
       <Link href="/" className="text-blue-600">&larr; Back</Link>
       <h1 className="text-2xl font-bold mt-2 mb-4">Pages for "{campaign.name}"</h1>
 
+      {/* Status chips */}
       {counts && (
-        <p className="mb-4 text-sm text-gray-700">
-          Queued: {counts.queued} &nbsp;•&nbsp;
-          Rendering: {counts.rendering} &nbsp;•&nbsp;
-          Done: {counts.done} &nbsp;•&nbsp;
-          Error: {counts.error}
-        </p>
+        <div className="flex gap-2 mb-4">
+          <StatusPill label="queued" count={counts.queued} />
+          <StatusPill label="rendering" count={counts.rendering} />
+          <StatusPill label="done" count={counts.done} />
+          <StatusPill label="error" count={counts.error} />
+        </div>
       )}
 
       {/* Master video upload */}
@@ -83,6 +97,14 @@ export default function CampaignDetail() {
         className="inline-block mb-4 bg-green-600 text-white px-3 py-2 rounded"
       >
         Import Leads
+      </Link>
+
+      <Link
+        href={`/api/export?campaignId=${id}`}
+        className="inline-block mb-4 ml-3 bg-indigo-600 text-white px-3 py-2 rounded"
+        target="_blank"
+      >
+        Download CSV
       </Link>
 
       <form onSubmit={add} className="flex gap-2 items-end mb-6">
